@@ -1,0 +1,51 @@
+@page "/currency"
+
+@using Domain.Services
+@using Domain.Model
+@inject ICurrencyApi CurrencyService
+
+
+<h1>Currency converter</h1>
+
+@if (rates == null)
+{
+    <p><em>Loading...</em></p>
+    <p>@error</p>
+}
+else
+{
+    <h3>1 @rates.Base is worth as of @rates.Date.ToString("d"):</h3>
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Currency</th>
+                <th>Rate</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var rate in rates.RateList)
+            {
+                <tr>
+                    <td>@rate.Key</td>
+                    <td>@rate.Value</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    private Rates rates;
+    private string error;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var response = await CurrencyService.GetLatest();
+        if (response.IsSuccessStatusCode)
+        {
+            rates = response.Content;
+        }
+        else
+            error = response.Error.Content;
+    }
+}
