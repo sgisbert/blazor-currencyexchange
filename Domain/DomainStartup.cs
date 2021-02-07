@@ -9,7 +9,7 @@ namespace Domain
     {
         public static void InitDomain(this IServiceCollection services)
         {
-            services.AddScoped<ICurrencyService, CurrencyService>();
+            services.AddSingleton<ICurrencyService, CurrencyService>();
 
             services.AddRefitClient<ICurrencyApi>()
                     .ConfigureHttpClient(c => c.BaseAddress = new Uri("https://api.exchangeratesapi.io/"))

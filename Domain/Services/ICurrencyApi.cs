@@ -9,5 +9,8 @@ namespace Domain.Services
     {
         [Get("/latest")]
         Task<ApiResponse<Rates>> GetLatest();
+
+        [Get("/{date}")]
+        Task<ApiResponse<Rates>> GetDate(string date);
     }
 }

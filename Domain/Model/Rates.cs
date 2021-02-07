@@ -17,10 +17,10 @@ namespace Domain.Model
 
         [JsonProperty("date")]
         public DateTimeOffset Date { get; set; }
-    }
 
-    public partial class Rates
-    {
+        [JsonProperty("error")]
+        public string Error { get; set; }
+        
         public static Rates FromJson(string json) => JsonConvert.DeserializeObject<Rates>(json, Converter.Settings);
     }
 

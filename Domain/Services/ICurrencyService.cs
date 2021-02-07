@@ -1,11 +1,16 @@
 ﻿using Domain.Model;
 using Refit;
+using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Domain.Services
 {
     public interface ICurrencyService
     {
-        Task<ApiResponse<Rates>> GetLatest();
+        Task<Rates> GetLatest();
+        Dictionary<string, string> GetCurrencies();
+        Task<Rates> GetDate(DateTime date);
+        Task<DateTime> GetLatestDate();
     }
 }

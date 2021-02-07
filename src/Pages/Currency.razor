@@ -2,23 +2,29 @@
 
 @using Domain.Services
 @using Domain.Model
-@inject ICurrencyApi CurrencyService
+@inject ICurrencyService CurrencyService
 
 
 <h1>Currency converter</h1>
+<p>Latest date: @_latestDate.ToString("d")</p>
 
 @if (rates == null)
 {
-    <p><em>Loading...</em></p>
+    <p><em>Loading rates...</em></p>
     <p>@error</p>
 }
 else
 {
-    <h3>1 @rates.Base is worth as of @rates.Date.ToString("d"):</h3>
+    <EditForm EditContext="@_editContext">
+        <h3>1 @rates.Base is worth, as of: <InputDate @bind-Value="CurrencyDate" /></h3>
+        <p>@((MarkupString)error)</p>
+        <p>@((MarkupString)message)</p>
+    </EditForm>
     <table class="table">
         <thead>
             <tr>
                 <th>Currency</th>
+                <th>Name</th>
                 <th>Rate</th>
             </tr>
         </thead>
@@ -27,6 +33,7 @@ else
             {
                 <tr>
                     <td>@rate.Key</td>
+                    <td>@(currencies.Keys.Contains(rate.Key) ? currencies[rate.Key] : string.Empty)</td>
                     <td>@rate.Value</td>
                 </tr>
             }
@@ -36,16 +43,41 @@ else
 
 @code {
     private Rates rates;
+    private Dictionary<string, string> currencies;
     private string error;
+    private string message;
+    private EditContext _editContext;
+    public DateTime _latestDate;
+    public DateTime CurrencyDate = DateTime.Today;
 
     protected override async Task OnInitializedAsync()
     {
-        var response = await CurrencyService.GetLatest();
-        if (response.IsSuccessStatusCode)
+        _editContext = new EditContext(CurrencyDate);
+        _editContext.OnFieldChanged += EditContext_OnFieldChanged;
+
+        rates = await CurrencyService.GetLatest();
+        if (rates.Error == null)
         {
-            rates = response.Content;
+            _latestDate = await CurrencyService.GetLatestDate();
+            CurrencyDate = _latestDate;
+            currencies = CurrencyService.GetCurrencies();
         }
         else
-            error = response.Error.Content;
+            error = rates.Error;
+    }
+
+    private async void EditContext_OnFieldChanged(object sender, FieldChangedEventArgs e)
+    {
+        if (((Currency)e.FieldIdentifier.Model).CurrencyDate > _latestDate || ((Currency)e.FieldIdentifier.Model).CurrencyDate < new DateTime(1999, 1, 4))
+        {
+            error = $"Selecciona una fecha posterior a 04/01/1999 y anterior a la del último valor: {_latestDate.ToString("d")}";
+        }
+        else
+        {
+            error = "";
+            message = $"La fecha seleccionada es {((Currency)e.FieldIdentifier.Model).CurrencyDate.ToString("d")}";
+            rates = await CurrencyService.GetDate(((Currency)e.FieldIdentifier.Model).CurrencyDate);
+            StateHasChanged();
+        }
     }
 }
