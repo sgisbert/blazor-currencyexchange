@@ -40,9 +40,9 @@ namespace Domain.Services
             return _latestRates;
         }
 
-        public async Task<Rates> GetDate(DateTime date, string @base = "EUR")
+        public async Task<Rates> GetDate(DateTime date, string symbols = "", string @base = "EUR")
         {
-            var request = await _api.GetDate(date.ToString("yyyy-MM-dd"), @base);
+            var request = await _api.GetDate(date.ToString("yyyy-MM-dd"), symbols, @base);
             if (request.IsSuccessStatusCode)
             {
                 return request.Content;
@@ -99,7 +99,7 @@ namespace Domain.Services
                 .Select(r => new
                 {
                     r.ISOCurrencySymbol,
-                    r.CurrencyEnglishName
+                    r.CurrencyEnglishName,
                 })
                 .Where(c => currencyCodes.Contains(c.ISOCurrencySymbol))
                 .OrderBy(d => d.CurrencyEnglishName)

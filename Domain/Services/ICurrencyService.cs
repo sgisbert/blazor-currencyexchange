@@ -10,7 +10,7 @@ namespace Domain.Services
     {
         Task<Rates> GetLatest();
         Dictionary<string, string> GetCurrencies();
-        Task<Rates> GetDate(DateTime date, string @base);
+        Task<Rates> GetDate(DateTime date, string symbols = "", string @base = "EUR");
         Task<DateTime> GetLatestDate();
     }
 }
