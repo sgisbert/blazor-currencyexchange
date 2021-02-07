@@ -11,6 +11,6 @@ namespace Domain.Services
         Task<ApiResponse<Rates>> GetLatest();
 
         [Get("/{date}")]
-        Task<ApiResponse<Rates>> GetDate(string date);
+        Task<ApiResponse<Rates>> GetDate(string date, string @base = "EUR");
     }
 }

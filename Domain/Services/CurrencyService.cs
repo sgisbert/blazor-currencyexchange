@@ -40,9 +40,9 @@ namespace Domain.Services
             return _latestRates;
         }
 
-        public async Task<Rates> GetDate(DateTime date)
+        public async Task<Rates> GetDate(DateTime date, string @base = "EUR")
         {
-            var request = await _api.GetDate(date.ToString("yyyy-MM-dd"));
+            var request = await _api.GetDate(date.ToString("yyyy-MM-dd"), @base);
             if (request.IsSuccessStatusCode)
             {
                 return request.Content;
@@ -78,7 +78,6 @@ namespace Domain.Services
 
             if (!currencyCodes.Contains("EUR"))
                 currencyCodes.Add("EUR");
-            currencyCodes = currencyCodes.OrderBy(c => c).ToList();
 
             var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures)
                 .Select(ci => ci.LCID).Distinct();
@@ -103,6 +102,7 @@ namespace Domain.Services
                     r.CurrencyEnglishName
                 })
                 .Where(c => currencyCodes.Contains(c.ISOCurrencySymbol))
+                .OrderBy(d => d.CurrencyEnglishName)
                 .ToDictionary(k => k.ISOCurrencySymbol, v => v.CurrencyEnglishName);
         }
     }

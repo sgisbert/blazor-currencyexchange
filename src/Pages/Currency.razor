@@ -39,7 +39,7 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var rate in rates.RateList)
+            @foreach (var rate in rates.RateList.OrderBy(r => r.Key))
             {
                 <tr>
                     <td>@rate.Key</td>
@@ -88,7 +88,7 @@ else
         {
             error = "";
             message = $"La fecha seleccionada es {Model.CurrencyDate.ToString("d")}";
-            rates = await CurrencyService.GetDate(Model.CurrencyDate);
+            rates = await CurrencyService.GetDate(Model.CurrencyDate, Model.Currency);
             StateHasChanged();
         }
     }
