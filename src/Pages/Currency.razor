@@ -16,7 +16,7 @@
 else
 {
     <EditForm EditContext="@_editContext">
-        <h3>1 @rates.Base is worth, as of: <InputDate @bind-Value="CurrencyDate" /></h3>
+        <h3>1 @rates.Base is worth, as of: <InputDate @bind-Value="Model.CurrencyDate" /></h3>
         <p>@((MarkupString)error)</p>
         <p>@((MarkupString)message)</p>
     </EditForm>
@@ -47,19 +47,20 @@ else
     private string error;
     private string message;
     private EditContext _editContext;
+    private FormModel Model = new FormModel();
+
     public DateTime _latestDate;
-    public DateTime CurrencyDate = DateTime.Today;
 
     protected override async Task OnInitializedAsync()
     {
-        _editContext = new EditContext(CurrencyDate);
+        _editContext = new EditContext(Model);
         _editContext.OnFieldChanged += EditContext_OnFieldChanged;
 
         rates = await CurrencyService.GetLatest();
         if (rates.Error == null)
         {
             _latestDate = await CurrencyService.GetLatestDate();
-            CurrencyDate = _latestDate;
+            Model.CurrencyDate = _latestDate;
             currencies = CurrencyService.GetCurrencies();
         }
         else
@@ -68,15 +69,15 @@ else
 
     private async void EditContext_OnFieldChanged(object sender, FieldChangedEventArgs e)
     {
-        if (((Currency)e.FieldIdentifier.Model).CurrencyDate > _latestDate || ((Currency)e.FieldIdentifier.Model).CurrencyDate < new DateTime(1999, 1, 4))
+        if (Model.CurrencyDate > _latestDate || Model.CurrencyDate < new DateTime(1999, 1, 4))
         {
             error = $"Selecciona una fecha posterior a 04/01/1999 y anterior a la del último valor: {_latestDate.ToString("d")}";
         }
         else
         {
             error = "";
-            message = $"La fecha seleccionada es {((Currency)e.FieldIdentifier.Model).CurrencyDate.ToString("d")}";
-            rates = await CurrencyService.GetDate(((Currency)e.FieldIdentifier.Model).CurrencyDate);
+            message = $"La fecha seleccionada es {Model.CurrencyDate.ToString("d")}";
+            rates = await CurrencyService.GetDate(Model.CurrencyDate);
             StateHasChanged();
         }
     }
