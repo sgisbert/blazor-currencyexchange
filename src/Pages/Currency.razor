@@ -16,7 +16,17 @@
 else
 {
     <EditForm EditContext="@_editContext">
-        <h3>1 @rates.Base is worth, as of: <InputDate @bind-Value="Model.CurrencyDate" /></h3>
+        <h3>
+            1
+            <InputSelect id="currencies" @bind-Value="Model.Currency">
+                @foreach (var currency in currencies)
+                {
+                    <option value="@currency.Key">@currency.Value</option>
+                }
+            </InputSelect>
+
+            is worth, as of: <InputDate @bind-Value="Model.CurrencyDate" />
+        </h3>
         <p>@((MarkupString)error)</p>
         <p>@((MarkupString)message)</p>
     </EditForm>
@@ -61,6 +71,7 @@ else
         {
             _latestDate = await CurrencyService.GetLatestDate();
             Model.CurrencyDate = _latestDate;
+            Model.Currency = rates.Base;
             currencies = CurrencyService.GetCurrencies();
         }
         else

@@ -72,9 +72,13 @@ namespace Domain.Services
             List<string> currencyCodes = new List<string>();
 
             if (_rates != null && _rates.RateList.Any())
-                currencyCodes = _rates.RateList.Select(d => d.Key).OrderBy(c => c).ToList();
+                currencyCodes = _rates.RateList.Select(d => d.Key).ToList();
             else
                 return null;
+
+            if (!currencyCodes.Contains("EUR"))
+                currencyCodes.Add("EUR");
+            currencyCodes = currencyCodes.OrderBy(c => c).ToList();
 
             var cultures = CultureInfo.GetCultures(CultureTypes.AllCultures)
                 .Select(ci => ci.LCID).Distinct();
