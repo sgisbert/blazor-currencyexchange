@@ -1,4 +1,3 @@
-using BlazorCurrencyExchange.Data;
 using Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -23,7 +22,6 @@ namespace BlazorCurrencyExchange
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<WeatherForecastService>();
 
             services.InitDomain();
         }
