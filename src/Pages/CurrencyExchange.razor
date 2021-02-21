@@ -4,99 +4,114 @@
 @using Domain.Model
 @inject ICurrencyService CurrencyService
 
-
-<h1>Currency converter</h1>
-<p>Latest date: @_latestDate.ToString("d")</p>
-
-@if (rates == null)
-{
-    <p><em>Loading rates...</em></p>
-    <p>@error</p>
-}
-else
-{
-<EditForm EditContext="@_editContext" OnValidSubmit="@HandleSubmit">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
-
-    
-    <InputNumber @bind-Value="Model.Amount"></InputNumber>
-    <InputSelect @bind-Value="Model.OriginCurrency">
-        <option value=""></option>
-
-        @foreach (var currency in currencies)
-            {
-            <option value="@currency.Key">@currency.Value</option>
-            }
-    </InputSelect>
-    into
-    <InputSelect @bind-Value="Model.TargetCurrency">
-        <option value=""></option>
-        @foreach (var currency in currencies)
-            {
-            <option value="@currency.Key">@currency.Value</option>
-            }
-    </InputSelect>
-    as of: <InputDate @bind-Value="Model.CurrencyDate" />
-    <br />
-    <button type="submit">Convert</button>
-</EditForm>
-
-    <h3>
-        Result: @message
-    </h3>
-}
-
-@code {
-    private Rates rates;
-    private Dictionary<string, string> currencies;
-    private string error;
-    private string message;
-    private EditContext _editContext;
-    private FormConverterModel Model = new FormConverterModel();
-
-    public DateTime _latestDate;
-
-    protected override async Task OnInitializedAsync()
-    {
-        _editContext = new EditContext(Model);
-        //_editContext.OnFieldChanged += EditContext_OnFieldChanged;
-
-        rates = await CurrencyService.GetLatest();
-        if (rates.Error == null)
-        {
-            _latestDate = await CurrencyService.GetLatestDate();
-            Model.CurrencyDate = _latestDate;
-            currencies = CurrencyService.GetCurrencies();
-            Model.Amount = 1;
+    <style>
+        form .row {
+            margin-bottom: 22px;
         }
-        else
-            error = rates.Error;
+    </style>
+
+
+    <h1>Currency converter</h1>
+    <p>Latest date: @_latestDate.ToString("d")</p>
+
+    @if (rates == null)
+    {
+        <p><em>Loading rates...</em></p>
+        <p>@error</p>
     }
-    private async void HandleSubmit()
+    else
     {
-        var rates = await CurrencyService.GetDate(Model.CurrencyDate, symbols: Model.TargetCurrency, @base: Model.OriginCurrency);
-        if (rates.RateList != null && rates.RateList.ContainsKey(Model.TargetCurrency))
-        {
-            var value = rates.RateList[Model.TargetCurrency];
-            var result = Math.Round(Model.Amount * value, 2);
-            message = $"{result} {Model.TargetCurrency}";
-            StateHasChanged();
-        }
+
+        <RadzenTemplateForm Data="@Model" TItem="FormConverterModel" Submit=@HandleSubmit>
+            <div class="row">
+                <div class="col-md-1 d-flex align-items-center text-md-right">
+                    <RadzenLabel Text="Amount:" />
+                </div>
+                <div class="col-md-11">
+                    <RadzenNumeric Name="Amount" TValue="long" @bind-Value=@Model.Amount Placeholder="Amount..." Min="1" />
+                    <br />
+                    <RadzenNumericRangeValidator Component="Amount" Min="1" Text="Amount should be greater than 0" Popup="false" Style="position: absolute" />
+                    <RadzenRequiredValidator Component="Amount" Text="Amount is required" Style="position: absolute;" Popup="false" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-1 d-flex align-items-center">
+                    <RadzenLabel Text="From:" />
+                </div>
+                <div class="col-md-11">
+                    <RadzenDropDown AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Data=@currencies @bind-Value=@Model.OriginCurrency
+                                    TextProperty="Value" ValueProperty="Key" Placeholder="Select origin currency" Name="OriginCurrency" />
+                    <br />
+                    <RadzenRequiredValidator Component="OriginCurrency" Text="Origin currency is required" Style="position: absolute;" Popup="false" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-1 d-flex align-items-center">
+                    <RadzenLabel Text="To:" />
+                </div>
+                <div class="col-md-11">
+                    <RadzenDropDown AllowClear="true" AllowFiltering="true" FilterCaseSensitivity="FilterCaseSensitivity.CaseInsensitive" Data=@currencies @bind-Value=@Model.TargetCurrency
+                                    TextProperty="Value" ValueProperty="Key" Placeholder="Select destination currency" Name="TargetCurrency" />
+                    <br />
+                    <RadzenRequiredValidator Component="TargetCurrency" Text="Origin currency is required" Style="position: absolute;" Popup="false" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-1 d-flex align-items-center">
+                    <RadzenLabel Text="As of:" />
+                </div>
+                <div class="col-md-11">
+                    <RadzenDatePicker @bind-Value="Model.CurrencyDate" TValue="DateTime" ShowTime="false" DateFormat="d" Name="Date" />
+                    <br />
+                    <RadzenCompareValidator Value=@_latestDate Component="Date" Style="position: absolute" Operator=@CompareOperator.LessThanEqual Text="Date must be today or in the past" />
+                    <RadzenCompareValidator Value=@_minDate Component="Date" Style="position: absolute" Operator=@CompareOperator.GreaterThanEqual Text="Date must be grater than 1999, 1st April" />
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-2 d-flex">
+                    <RadzenButton ButtonType="ButtonType.Submit" Icon="cached" Text="Convert" />
+                </div>
+            </div>
+
+        </RadzenTemplateForm>
+
+        <h3>
+            @message
+        </h3>
     }
 
-    //private async void EditContext_OnFieldChanged(object sender, FieldChangedEventArgs e)
-    //{
-    //    if (Model.CurrencyDate > _latestDate || Model.CurrencyDate < new DateTime(1999, 1, 4))
-    //    {
-    //        error = $"Selecciona una fecha posterior a 04/01/1999 y anterior a la del último valor: {_latestDate.ToString("d")}";
-    //    }
-    //    else
-    //    {
-    //        error = "";
-    //        message = $"La fecha seleccionada es {Model.CurrencyDate.ToString("d")}";
-    //        rates = await CurrencyService.GetDate(Model.CurrencyDate, Model.Currency);
-    //        StateHasChanged();
-    //    }
-    //}
-}
+    @code {
+        private Rates rates;
+        private Dictionary<string, string> currencies;
+        private string error;
+        private string message;
+        private FormConverterModel Model = new FormConverterModel();
+
+        public DateTime _latestDate;
+        public DateTime _minDate = new DateTime(1999, 1, 4);
+
+        protected override async Task OnInitializedAsync()
+        {
+            rates = await CurrencyService.GetLatest();
+            if (rates.Error == null)
+            {
+                _latestDate = await CurrencyService.GetLatestDate();
+                Model.CurrencyDate = _latestDate;
+                currencies = CurrencyService.GetCurrencies();
+                Model.Amount = 1;
+            }
+            else
+                error = rates.Error;
+        }
+        private async void HandleSubmit()
+        {
+            var rates = await CurrencyService.GetDate(Model.CurrencyDate, symbols: Model.TargetCurrency, @base: Model.OriginCurrency);
+            if (rates?.RateList != null && rates.RateList.ContainsKey(Model.TargetCurrency))
+            {
+                var value = rates.RateList[Model.TargetCurrency];
+                var result = Math.Round(Model.Amount * value, 3);
+                message = $"{result} {Model.TargetCurrency}";
+                StateHasChanged();
+            }
+        }
+    }
